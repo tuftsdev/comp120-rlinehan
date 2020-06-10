@@ -14,16 +14,42 @@
 <div id="lyrics"></div>
 
 <script>
-	var vid = document.getElementById("butwehavethepower");
-    var lyrics = document.getElementById("lyrics");
-    vid.addEventListener('timeupdate', function() {
-        if (vid.currentTime > 5 && vid.currentTime <= 6) {
-            lyrics.innerHTML = "New text!";
-        }
-        else {
-            lyrics.innerHTML = "";
-        }
-    }, false);
+	vid = document.getElementById("butwehavethepower");
+    lyrics = document.getElementById("lyrics");
+    lyricList = 
+        [{"start":6, "end":8, "lyric":"Come gather round, children,", "person":"lisa"}, 
+        {"start":8, "end":11, "lyric":"It's high time ye learned", "person":"lisa"}, 
+        {"start":11, "end":13, "lyric":"'Bout a hero named Homer", "person":"lisa"}, 
+        {"start":13, "end":17, "lyric":"And a devil named Burns.", "person":"lisa"}, 
+        {"start":17, "end":19, "lyric":"We'll march 'till we drop", "person":"lisa"}, 
+        {"start":19, "end":21, "lyric":"The girls and the fellas.", "person":"lisa"}, 
+        {"start":21, "end":23, "lyric":"We'll fight 'till the death", "person":"lisa"}, 
+        {"start":23, "end":27, "lyric":"Or else fold like umbrellas.", "person":"lisa"}, 
+        {"start":27, "end":38, "lyric":"", "person":"lisa"},
+        {"start":38, "end":40, "lyric":"So we'll march day and night", "person":"lisa"}, 
+        {"start":40, "end":43, "lyric":"By the big cooling tower.", "person":"lisa"}, 
+        {"start":43, "end":45, "lyric":"They have the plant", "person":"lisa"}, 
+        {"start":45, "end":49, "lyric":"But we have the power.", "person":"lisa"}, 
+        {"start":49, "end":53, "lyric":"", "person":"lisa"},
+        {"start":53, "end":55, "lyric":"Now do \"Classical Gas!\"", "person":"lenny"}, 
+        {"start":55, "end":73, "lyric":"", "person":"lisa"},
+        {"start":73, "end":75, "lyric":"So we'll march day and night", "person":"lisa"}, 
+        {"start":75, "end":78, "lyric":"By the big cooling tower.", "person":"lisa"}, 
+        {"start":78, "end":80, "lyric":"They have the plant", "person":"lisa"}, 
+        {"start":80, "end":82, "lyric":"But we have the power.", "person":"lisa"}, 
+        {"start":82, "end":1101, "lyric":"", "person":"lisa"}];  
+        vid.addEventListener('timeupdate', function() {
+            for (i = 0; i < lyricList.length; i++) {
+                if (vid.currentTime >= lyricList[i].start && vid.currentTime < lyricList[i].end) {
+                    if (lyricList[i].person == "lisa") {
+                        lyrics.innerHTML = "<p class=\"lisa\">" + lyricList[i].lyric + "</p>";
+                    }
+                    else {
+                        lyrics.innerHTML = "<p class=\"lenny\">" + lyricList[i].lyric + "</p>";
+                    }
+                }
+            }
+        }, false);
 </script>
 </body>
 </html>
