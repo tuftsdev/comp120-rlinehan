@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Union Strike Folk Song</title>
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+<h1 id="title">Union Strike Folk Song</h1>
+
+<video src="https://www.cs.tufts.edu/comp/120/butwehavethepower.mp4" id="butwehavethepower" controls></video>
+<div id="lyrics"></div>
+
+<script>
+	var vid = document.getElementById("butwehavethepower");
+    var lyrics = document.getElementById("lyrics");
+    vid.addEventListener('timeupdate', function() {
+        if (vid.currentTime > 5 && vid.currentTime <= 6) {
+            lyrics.innerHTML = "New text!";
+        }
+        else {
+            lyrics.innerHTML = "";
+        }
+    }, false);
+</script>
+</body>
+</html>
