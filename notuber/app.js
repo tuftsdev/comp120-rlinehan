@@ -1,3 +1,70 @@
-var data=[{"id":"mXfkjrFw","lat":42.3453,"long":-71.0464},{"id":"nZXB8ZHz","lat":42.3662,"long":-71.0621},{"id":"Tkwu74WC","lat":42.3603,"long":-71.0547},{"id":"5KWpnAJN","lat":42.3472,"long":-71.0802},{"id":"uf5ZrXYw","lat":42.3663,"long":-71.0544},{"id":"VMerzMH8","lat":42.3542,"long":-71.0704}]
-var map;function initMap(){var icon={url:"car.png",scaledSize:new google.maps.Size(15,35)}
-map=new google.maps.Map(document.getElementById("map"),{center:{lat:42.352271,lng:-71.05524200000001},zoom:14});for(i=0;i<data.length;i++){var marker=new google.maps.Marker({position:{lat:data[i].lat,lng:data[i].long},map:map,icon:icon})}}
+function placeMarker(pos, map, icon) {
+  return new google.maps.Marker({ position: pos, map: map, icon: icon });
+}
+
+function getDistance(carPos, myPos) {
+  return google.maps.geometry.spherical.computeDistanceBetween(myPos, carPos)*0.000621371;
+}
+
+function getClosest(carPos, distances) {
+  return carPos[distances.indexOf(Math.min(...distances))];
+}
+
+function makeRoute(myPos, carPos, map) {
+  var route = new google.maps.Polyline({
+    path: [{lat: myPos.lat(), lng: myPos.lng()}, {lat: carPos.lat(), lng: carPos.lng()}],
+    geodesic: true,
+    strokeColor: '#FF0000',
+    strokeOpacity: 1.0,
+    strokeWeight: 2
+  });
+
+  route.setMap(map);
+}
+
+function makeMeInfoWindow(marker, closestCar, distance) {
+  var infoWindow = new google.maps.InfoWindow({
+    content: '<div id="infoWindow"> <h1>You are here!</h1><p> Closest car ID: ' + closestCar.username +  '</p><p> Distance from you: ' + distance.toFixed(2) +  ' miles </p></div>'
+  });
+  infoWindow.open(map, marker);
+}
+
+function makeCarInfoWindow(car, distance) {
+  var infoWindow = new google.maps.InfoWindow({
+    content: '<div id="infoWindow"><p> Car ID: ' + car.username +  '</p><p> Distance from you: ' + distance.toFixed(2) +  ' miles </p></div>'
+  });
+  infoWindow.open(map, car.marker);
+}
+
+function initMap() {
+    var map = new google.maps.Map(document.getElementById("map"), { center: { lat: 42.352271, lng: -71.05524200000001 }, zoom: 7 });
+    var carIcon = { url: "car.png", scaledSize: new google.maps.Size(15, 35) };
+    navigator.geolocation.getCurrentPosition(function(position) {
+        myPos = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        var myMarker = placeMarker(myPos, map);
+        var carsXHR = new XMLHttpRequest();
+        carsXHR.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var cars = JSON.parse(this.responseText);
+                var distances = new Array(cars.length);
+                for (let i = 0; i < cars.length; i++) {
+                    cars[i].latLng = new google.maps.LatLng(cars[i].lat, cars[i].lng);
+                    cars[i].marker = placeMarker(cars[i].latLng, map, carIcon);
+                    distances[i] = getDistance(myPos, cars[i].latLng);
+                    cars[i].marker.addListener("click", function() {
+                      console.log(cars[i]);
+                      makeCarInfoWindow(cars[i], distances[i]);
+                    });
+                }
+                var closestIndex = distances.indexOf(Math.min(...distances));
+                myMarker.addListener("click", function() {
+                    makeRoute(myPos, cars[closestIndex].latLng, map);
+                    makeMeInfoWindow(myMarker, cars[closestIndex], distances[closestIndex]);
+                });
+            }
+        }
+        carsXHR.open("POST", "https://jordan-marsh.herokuapp.com/rides", true);
+        carsXHR.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        carsXHR.send("username=jNtRRJiZ&lat=" + myPos.lat() + "&lng=" + myPos.lng());
+    });
+}
