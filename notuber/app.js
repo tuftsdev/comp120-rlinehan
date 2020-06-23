@@ -63,7 +63,7 @@ function initMap() {
                 });
             }
         }
-        carsXHR.open("POST", "https://jordan-marsh.herokuapp.com/rides", true);
+        carsXHR.open("POST", "https://curl --data "username=whocares" https://damp-escarpment-52268.herokuapp.com/rides", true);
         carsXHR.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         carsXHR.send("username=jNtRRJiZ&lat=" + myPos.lat() + "&lng=" + myPos.lng());
     });
