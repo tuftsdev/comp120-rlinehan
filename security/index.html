@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link href="style.css" rel="stylesheet">
+        <title>Rose Linehan</title>
+    </head>
+    <body>
+        <h1>Introduction</h1>
+        <p>The purpose of this document is to identify security and privacy concerns in Not Uber, a ride-hailing web application. Solutions are also suggested. </p>
+        <h1>Methodology</h1>
+        <p>Since the source code was available, I began penetration testing by reading it. In so doing I was able to identify areas where u ser input was colected and used. These are the routes most vulnerable to attack. I verified the weaknesses in GET methods simply by inserting malicious query parameters into the URL, and I used curl to supply parameters to POST routes.</p>
+        <h1>Abstract of Findings</h1>
+        <p>SQL injection is the main concern in this application. Information about passengers and vehicles is stored in a database. The application gets data from the user, such as username or lat/long coordinates, and uses commands written in SQL (structured query language) to put that information into the database, or to get related information out (e.g., cars in the vicinity of the passenger). A attacker can, instead of a valid username, supply the application with strings of characters that, in the context of an SQL query, are interpreted as commands which do nasty things to the database: delete everything in it, display the sensitive data it holds, etc. Rather than inject SQL commands, an attacker can also inject a snippet of HTML as a username. When that username is retrieved from the database to be displayed on the main page of the app, that HTML code is rendered, causing the page to display whatever the attacker wants. If that code is JavaScript inside a &lt;script&gt; tag, the attack is referred to as cross-site scripting. Javascript provides even greater opportunity to capture the data of unsuspecting users, or simply destroy the application.</p>
+        <h1>Issues Found</h1>
+        <ul>
+            <li>SQL injection to access all users and vehicles</li>
+                <ul>
+                    <li>Location: /vehicle.json, /passenger.json, /rides</li>
+                    <li>Severity: high. Allows all entries of the vehicle and passenger tables to be retrieved; displays the usernames and locations of every car and user. Could also be used to erase entries from the tables, or drop the tables altogether.</li>
+                    <li>Description: oberving the source code, it was obvious that the username query parameter was concatenated directly into the SQL query, allowing for input of malicious values. Specifically, simply appending 'OR 1=1', an always-true statement, to the URL would mean that all users would be returned. I was able to verify in the browser.</li>
+                    <li> Proof of vulnerability: 
+                        <p><img style="max-width:80%" src=many_users.PNG alt=SQLinject></p>
+                    </li>
+                    <li>Resolution: do not use direct concatenation to form the query string. First, validate the user input, filtering out characters that carry meaning in SQL, like the single quote</li>
+                </ul>
+            <li>HTML injection</li>
+                <ul>
+                    <li>Location: /rides</li>
+                    <li>Severity: medium. The page could be altered in any number of ways to present links for users to click or forms to fill out, all with the intention of gathering their information. However the user would have to interact with whatever was displayed for real damage to be done.</li>
+                    <li>Description: Much like the SQL injection, I observed that usernames were being stored directly in the passengers table when the rides POST route was used. On loading index.html, those usernames were stuck directly into the HTML.</li>
+                    <li> Proof of vulnerability: to verify the problem, I used the following curl command: 
+                        <p><img style="max-width:80%" src=gerbilCommand.PNG alt=HTMLinject></p>
+                        <p>This created an iframe in index.html which was the size of the whole window, effectively turning jordan-marsh.herokuapp.com into the Wikipedia page on gerbils:</p>
+                        <p><img style="max-width:80%" src=gerbil.PNG alt=HTMLinject></p>
+                    </li>
+                    <li>Resolution: Similar to SQL injection: sanitize user input before inserting it into the database. Also consider limiting the length of usernames--a quick way to ensure that huge long strings are not stored as usernames. </li>
+                </ul>
+            <li>Cross-site scripting</li>
+                <ul>
+                    <li>Location: /rides</li>
+                    <li>Severity: high. While the mechanism is the same as HTML injection, JavaScript has more power to perform malicions actions without the user doing anything.</li>
+                    <li>Description: This is really the same vulnerability observed above. Usernames are inserted directly into the HTML.</li>
+                    <li> Proof of vulnerability: to verify the problem, I used the following curl command: 
+                        <p><img style="max-width:80%" src=alertCommand.PNG alt=XSS></p>
+                        <p>This caused an alert to appear when index.html was loaded:</p>
+                        <p><img style="max-width:80%" src=alert.PNG alt=XSS></p>
+                    </li>
+                    <li>Resolution: More of the same--make sure no usernames that contain script tags are inserted into the database. </li>
+                </ul>
+            
+        </ul>
+        <h1>Conclusion</h1>
+        <p>This application does not store a large amount of user information; the most sensitive piece is a user's location. That said, it's pretty easy to obtain that information at present, and also pretty easy to make it more difficult to obtain. Preexisting tools like validator, which is already available in the application, can be used to sanitize user input to prevent injections of SQL, HTML, and JavaScript.</p>
+        
+        <p>Were this app to later create a user authentication flow, the use of response.header("Access-Control-Allow-Origin", "*") would become problematic; enabling access from any origin would allow outside parties to access browser-based info like cookies.</p>
+    </body>
+</html>
